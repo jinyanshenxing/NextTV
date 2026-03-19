@@ -1,8 +1,10 @@
 name: Build & Push Docker image
-on: workflow_dispatch
+
+on:
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   packages: write
   actions: write
 
@@ -26,16 +28,14 @@ jobs:
       - name: Generate version tags
         id: meta
         run: |
-          # 获取时间戳
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          # 获取分支名（清理特殊字符）
-          BRANCH=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9._-]/-/g')
+          BRANCH=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          OWNER="${{ github.repository_owner }}"
 
-          # 生成多个标签
-          TAGS="ghcr.io/seqcrafter/nexttv:latest"
-          TAGS="${TAGS},ghcr.io/seqcrafter/nexttv:${BRANCH}-${TIMESTAMP}"
+          TAGS="ghcr.io/${OWNER}/nexttv:latest"
+          TAGS="${TAGS},ghcr.io/${OWNER}/nexttv:${BRANCH}-${TIMESTAMP}"
 
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
           echo "Generated tags: ${TAGS}"
 
       - name: Build and push
