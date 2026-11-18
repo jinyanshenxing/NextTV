@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import * as m from "motion/react-m";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { pressSpring, reducedMotionQuery } from "@/lib/motion";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { MaterialSymbolsFavoriteOutlineRounded } from "@/components/icons";
 
-export function FavoriteButton({ source, id, videoDetail, className = "" }) {
+export function FavoriteButton({ source, id, videoDetail, className = "", showLabel = false }) {
   // 使用精确选择器：只选择当前item的收藏状态，避免不必要的重渲染
   const favoriteStateFromStore = useFavoritesStore((state) => state.favorites.some((fav) => fav.source === source && fav.id === id));
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
 
   // 本地乐观状态：用于立即响应用户点击
+  const reduceMotion = useMediaQuery(reducedMotionQuery);
   const [isOptimistic, setIsOptimistic] = useState(null);
 
   // 使用本地乐观状态（如果有）或store状态
@@ -39,16 +43,26 @@ export function FavoriteButton({ source, id, videoDetail, className = "" }) {
   };
 
   return (
-    <button
+    <m.button
+      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+      transition={pressSpring}
+      type="button"
       onClick={handleToggleFavorite}
-      className={`flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${favoriteState ? "" : "text-gray-400 dark:text-gray-500 hover:text-primary"
-        } ${className} ${favoriteState ? "text-red-500! hover:text-red-600!" : ""}`}
+      disabled={!videoDetail || !id || !source}
+      aria-label={favoriteState ? "取消收藏" : "添加收藏"}
+      aria-pressed={favoriteState}
+      className={`ui-button ${showLabel ? "" : "ui-icon-button"} ${favoriteState ? "bg-rose-50 text-rose-700 border-rose-200" : "text-muted"} ${className}`}
       title={favoriteState ? "取消收藏" : "添加收藏"}
     >
-      <MaterialSymbolsFavoriteOutlineRounded
-        className={`text-[24px] transition-transform duration-300 ${favoriteState ? "fill-current scale-110" : "scale-100"
-          }`}
-      />
-    </button>
+      <m.span
+        className="inline-flex"
+        initial={false}
+        animate={{ scale: reduceMotion ? 1 : favoriteState ? [1, 1.25, 1] : 1 }}
+        transition={{ type: "tween", duration: 0.28, ease: "easeOut" }}
+      >
+        <MaterialSymbolsFavoriteOutlineRounded className="text-xl" aria-hidden="true" />
+      </m.span>
+      {showLabel && <span>{favoriteState ? "已收藏" : "收藏"}</span>}
+    </m.button>
   );
 }

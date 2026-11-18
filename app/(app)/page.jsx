@@ -4,13 +4,16 @@ import { MovieCard } from "@/components/MovieCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { ContinueWatching } from "@/components/ContinueWatching";
 import { SearchBox } from "@/components/SearchBox";
+import { MediaTypeSwitch } from "@/components/MediaTypeSwitch";
+import { ResultItem } from "@/components/ResultItem";
+import { AnimatedDialog } from "@/components/AnimatedDialog";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { usePlayHistoryStore } from "@/store/usePlayHistoryStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { fetchRecommendations, loadUserTags, saveUserTags, defaultMovieTags, defaultTvTags, convertDoubanToMovie } from "@/lib/doubanApi";
 import {
   MaterialSymbolsMovieOutlineRounded,
-  MaterialSymbolsTvOutlineRounded,
-  MaterialSymbolsSmartphoneOutline,
   MaterialSymbolsAdd,
   MaterialSymbolsChevronLeftRounded,
   MaterialSymbolsChevronRightRounded,
@@ -21,12 +24,13 @@ export default function Home() {
   const [mediaType, setMediaType] = useState("movie");
   const [currentTag, setCurrentTag] = useState("华语");
   const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [movieTags, setMovieTags] = useState([]);
   const [tvTags, setTvTags] = useState([]);
   const [showTagModal, setShowTagModal] = useState(false);
   const pageSize = 12;
+  const recommendationGridClassName = "mx-auto grid w-[92%] grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6";
 
   // 获取播放记录
   const playHistory = usePlayHistoryStore((state) => state.playHistory);
@@ -96,13 +100,13 @@ export default function Home() {
   const handlePrevPage = () => {
     if (page > 0) {
       setPage(page - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "auto" });
     }
   };
 
   const handleNextPage = () => {
     setPage(page + 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
 
   const defaultTag = mediaType === "movie" ? "华语" : "国产剧";
@@ -167,129 +171,105 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full max-w-7xl flex flex-col gap-8 pt-6 page-enter">
-      {/* Search Hero */}
-      <div className="flex flex-col items-center justify-start gap-6 w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-[1440px] flex flex-col gap-6 sm:gap-8 pt-6 sm:pt-8 page-enter">
+      <section aria-labelledby="discovery-heading" className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-center">
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-sm sm:text-base font-medium text-primary-dark"><span aria-hidden="true" className="h-px w-5 bg-primary" /> 随时开启一段好时光</p>
+          <h1 id="discovery-heading" className="text-[28px] sm:text-[34px] leading-snug tracking-tight font-semibold text-ink">发现好故事</h1>
+          <p className="mt-2 text-sm leading-6 text-muted">电影、剧集与短剧，找到下一部想看的。</p>
+        </div>
         <SearchBox />
+      </section>
 
-        <div className="bg-gray-100 p-1 rounded-lg inline-flex items-center gap-0.5">
-          <label className="cursor-pointer relative">
-            <input className="peer sr-only" name="media-type" type="radio" value="movie" checked={mediaType === "movie"} onChange={() => handleMediaTypeChange("movie")} />
-            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm flex items-center gap-2 transition-all">
-              <MaterialSymbolsMovieOutlineRounded className="text-[18px]" />
-              电影
-            </div>
-          </label>
-          <div className={`w-px h-4 bg-gray-300 ${mediaType === "movie" || mediaType === "tv" ? "opacity-0" : "opacity-100"} transition-opacity`}></div>
-          <label className="cursor-pointer relative">
-            <input className="peer sr-only" name="media-type" type="radio" value="tv" checked={mediaType === "tv"} onChange={() => handleMediaTypeChange("tv")} />
-            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm flex items-center gap-2 transition-all">
-              <MaterialSymbolsTvOutlineRounded className="text-[18px]" />
-              电视剧
-            </div>
-          </label>
-          <div className={`w-px h-4 bg-gray-300 ${mediaType === "tv" || mediaType === "short" ? "opacity-0" : "opacity-100"} transition-opacity`}></div>
-          <label className="cursor-pointer relative">
-            <input className="peer sr-only" name="media-type" type="radio" value="short" checked={mediaType === "short"} onChange={() => handleMediaTypeChange("short")} />
-            <div className="media-toggle-btn px-6 py-2 rounded-lg text-sm font-semibold text-gray-500 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm flex items-center gap-2 transition-all">
-              <MaterialSymbolsSmartphoneOutline className="text-[18px]" />
-              短剧
-            </div>
-          </label>
+      {playHistory && playHistory.length > 0 && <ContinueWatching playHistory={playHistory} />}
+
+      <section aria-label="内容筛选" className="surface-panel px-3 py-3 sm:px-5 sm:py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <MediaTypeSwitch value={mediaType} onChange={handleMediaTypeChange} />
+          <p className="hidden md:block text-xs text-muted">{mediaType === "short" ? "红果热门短剧推荐" : "从豆瓣热门片单发现新内容"}</p>
         </div>
-      </div>
 
-      {/* Categories - 短剧模式不显示标签 */}
-      {mediaType !== "short" && (
-      <div className="w-full overflow-hidden relative group/scroll">
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar py-2 px-1">
-          <button
-            onClick={() => setShowTagModal(true)}
-            className="shrink-0 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer btn-press flex items-center"
-          >
-            <MaterialSymbolsAdd className="text-[16px] mr-1" />
-            管理标签
-          </button>
-          {currentTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => handleTagClick(tag)}
-              className={`shrink-0 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all cursor-pointer btn-press ${
-                tag === currentTag
-                  ? "bg-primary/10 border border-primary text-primary font-semibold hover:bg-primary hover:text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              {tag}
+        {mediaType !== "short" && (
+          <div className="mt-3 border-t border-line pt-3 flex items-start gap-2">
+            <div className="flex flex-1 min-w-0 gap-1 overflow-x-auto hide-scrollbar sm:flex-wrap px-1 py-1" role="toolbar" aria-label="分类标签">
+              {currentTags.map((tag) => (
+                <button type="button" key={tag} onClick={() => handleTagClick(tag)} aria-pressed={tag === currentTag} className="filter-chip btn-press">{tag}</button>
+              ))}
+            </div>
+            <button type="button" onClick={() => setShowTagModal(true)} className="mt-1 shrink-0 flex min-h-11 w-11 sm:w-auto items-center justify-center gap-1 rounded-lg px-2 text-xs text-muted hover:bg-surface-active hover:text-ink transition-colors cursor-pointer" aria-label="管理分类标签">
+              <MaterialSymbolsAdd className="text-lg" aria-hidden="true" /><span className="hidden sm:inline">管理标签</span>
             </button>
-          ))}
-        </div>
-        <div className="absolute right-0 top-0 bottom-0 w-24 bg-linear-to-l from-background-light to-transparent pointer-events-none"></div>
-      </div>
-      )}
+          </div>
+        )}
+      </section>
 
       {/* Popular Section */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-1 h-6 bg-primary rounded-full"></span>
-            {mediaType === "short" ? "红果短剧 - 热门推荐" : `豆瓣热门 - ${currentTag}`}
-          </h2>
+      <section aria-labelledby="recommendation-heading">
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <div className="min-w-0">
+            <h2 id="recommendation-heading" className="font-display text-lg sm:text-xl font-semibold text-ink">{mediaType === "short" ? "热门短剧" : "热门片单"}</h2>
+            <p className="mt-1 text-xs text-muted truncate">{mediaType === "short" ? "红果短剧推荐" : `豆瓣推荐 · ${currentTag}`}</p>
+          </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-muted tabular-nums mr-1">第 {page + 1} 页</span>
             <button
               onClick={handlePrevPage}
               disabled={page === 0}
-              className={`flex items-center justify-center w-9 h-9 rounded-lg border transition-all btn-press ${
-                page === 0 ? "border-gray-200 text-gray-300 cursor-not-allowed opacity-50" : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-primary hover:text-primary cursor-pointer"
-              }`}
+              className="ui-button ui-icon-button btn-press"
               title="上一页"
+              aria-label="上一页"
             >
-              <MaterialSymbolsChevronLeftRounded className="text-[20px]" />
+              <MaterialSymbolsChevronLeftRounded className="text-[20px]" aria-hidden="true" />
             </button>
             <button
               onClick={handleNextPage}
-              disabled={movies.length < pageSize}
-              className={`flex items-center justify-center w-9 h-9 rounded-lg border transition-all btn-press ${
-                movies.length < pageSize
-                  ? "border-gray-200 text-gray-300 cursor-not-allowed opacity-50"
-                  : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-primary hover:text-primary cursor-pointer"
-              }`}
+              disabled={loading || movies.length < pageSize}
+              className="ui-button ui-icon-button btn-press"
               title="下一页"
+              aria-label="下一页"
             >
-              <MaterialSymbolsChevronRightRounded className="text-[20px]" />
+              <MaterialSymbolsChevronRightRounded className="text-[20px]" aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-6">
+          <div aria-busy="true" aria-label="加载中" className={recommendationGridClassName}>
             {Array.from({ length: pageSize }).map((_, index) => (
               <SkeletonCard key={index} />
             ))}
           </div>
+        ) : movies.length === 0 ? (
+          <div role="status" className="surface-panel flex flex-col items-center justify-center gap-3 py-14 px-5 text-center text-muted">
+            <MaterialSymbolsMovieOutlineRounded className="text-4xl" aria-hidden="true" />
+            <p className="text-sm">暂时没有内容，请稍后重试或切换分类</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-6">
+          <div className={recommendationGridClassName}>
             {movies.map((movie, index) => (
-              <div key={movie.id} className="grid-item-animate">
-                <MovieCard movie={movie} />
-              </div>
+              <ResultItem key={movie.id} index={index}>
+                <MovieCard movie={movie} eager={index < 6} />
+              </ResultItem>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Continue Watching Section */}
-      {playHistory && playHistory.length > 0 && <ContinueWatching playHistory={playHistory} />}
+      </section>
 
       {/* Tag Management Modal */}
-      {showTagModal && (
-        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 modal-backdrop-enter" onClick={() => setShowTagModal(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto modal-content-enter" onClick={(e) => e.stopPropagation()}>
+      <AnimatedDialog
+        isOpen={showTagModal}
+        onClose={() => setShowTagModal(false)}
+        labelledBy="tag-modal-title"
+        initialFocusSelector='input[name="tagName"]'
+        overlayClassName="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-end sm:items-center justify-center z-[60]"
+        className="glass-panel relative rounded-t-3xl sm:rounded-2xl px-5 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6 max-w-md w-full sm:mx-4 max-h-[85dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain custom-scrollbar outline-none"
+      >
+            <div className="sheet-handle sm:hidden mb-2" aria-hidden="true" />
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">标签管理 ({mediaType === "movie" ? "电影" : "电视剧"})</h3>
-              <button onClick={() => setShowTagModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors btn-press">
+              <h3 id="tag-modal-title" className="text-lg sm:text-xl font-bold text-gray-900">标签管理 ({mediaType === "movie" ? "电影" : "电视剧"})</h3>
+              <button onClick={() => setShowTagModal(false)} aria-label="关闭" className="flex items-center justify-center size-11 sm:size-8 -mr-2 sm:mr-0 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors btn-press">
                 <MaterialSymbolsCloseRounded />
               </button>
             </div>
@@ -297,25 +277,27 @@ export default function Home() {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-gray-700">当前标签</h4>
-                <button onClick={handleResetTags} className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors btn-press">
+                <button onClick={handleResetTags} className="text-xs px-3 py-1 min-h-9 sm:min-h-0 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg cursor-pointer transition-colors btn-press">
                   恢复默认
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <m.div layoutScroll className="relative flex flex-wrap gap-2">
+                <AnimatePresence initial={false} mode="popLayout">
                 {currentTags.map((tag) => (
-                  <div key={tag} className="group bg-gray-100 text-gray-700 py-1.5 px-3 rounded-lg text-sm font-medium flex items-center gap-2">
+                  <m.div layout="position" key={tag} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.12 } }} className="group bg-white text-gray-700 ring-1 ring-gray-200 py-1.5 pl-3 pr-1.5 sm:px-3 rounded-lg text-sm font-medium flex items-center gap-1 sm:gap-2">
                     <span>{tag}</span>
                     {tag !== "热门" && (
-                      <button onClick={() => handleDeleteTag(tag)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer btn-press">
+                      <button onClick={() => handleDeleteTag(tag)} aria-label={`删除标签 ${tag}`} className="flex items-center justify-center size-8 sm:size-auto -my-1 sm:my-0 rounded-md text-gray-400 hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer btn-press">
                         <MaterialSymbolsCloseRounded className="text-[16px]" />
                       </button>
                     )}
-                  </div>
+                  </m.div>
                 ))}
-              </div>
+                </AnimatePresence>
+              </m.div>
             </div>
 
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-gray-900/[0.06] pt-4">
               <h4 className="font-semibold text-gray-700 mb-3">添加新标签</h4>
               <form
                 onSubmit={(e) => {
@@ -329,17 +311,17 @@ export default function Home() {
                 <input
                   type="text"
                   name="tagName"
+                  aria-label="新标签名称"
+                  autoComplete="off"
                   placeholder="输入标签名称..."
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
-                <button type="submit" className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium cursor-pointer transition-colors btn-press">
+                <button type="submit" className="ui-button ui-button-primary btn-press">
                   添加
                 </button>
               </form>
             </div>
-          </div>
-        </div>
-      )}
+      </AnimatedDialog>
     </div>
   );
 }

@@ -23,8 +23,8 @@ const SourceItem = ({ source, type, index, totalCount, toggleSource, onEdit, onD
 
   return (
     <div
-      className={`group flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 bg-white border rounded-2xl hover:shadow-card transition-all duration-200 gap-3 md:gap-4 ${
-        source.enabled ? "border-blue-100 hover:border-blue-200" : "border-gray-100 hover:border-gray-200"
+      className={`group flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 bg-surface-light border rounded-2xl hover:shadow-card transition-all duration-200 gap-3 md:gap-4 ${
+        source.enabled ? "border-primary/30 hover:border-primary/60" : "border-line hover:border-muted/40"
       }`}
     >
       <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0 overflow-hidden">
@@ -36,7 +36,7 @@ const SourceItem = ({ source, type, index, totalCount, toggleSource, onEdit, onD
             className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-200 border-gray-300 top-0"
             style={{
               left: source.enabled ? "24px" : "0px",
-              borderColor: source.enabled ? "#FAC638" : "#D1D5DB",
+              borderColor: source.enabled ? "var(--color-primary)" : "#D1D5DB",
             }}
             checked={source.enabled}
             onChange={() => toggleSource(source.id, type)}
@@ -116,19 +116,22 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   if (!shouldRender) return null;
 
   return (
-    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-out ${isAnimating ? "opacity-100" : "opacity-0"}`}>
+    <div className={`fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-end sm:items-center justify-center z-[60] sm:p-4 transition-opacity duration-300 ease-out ${isAnimating ? "opacity-100" : "opacity-0"}`}>
       <div
-        className={`bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out ${
-          isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={`glass-panel rounded-t-3xl sm:rounded-2xl max-w-md w-full max-h-[90dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain custom-scrollbar pb-safe transition-all duration-300 ease-out ${
+          isAnimating ? "opacity-100 translate-y-0 sm:scale-100" : "opacity-100 translate-y-full sm:opacity-0 sm:scale-95 sm:translate-y-4"
         }`}
       >
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+        <div className="sticky top-0 z-10 bg-surface-light/95 backdrop-blur-xl border-b border-line px-5 sm:px-6 py-3 sm:py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">{title}</h3>
+          <button onClick={onClose} aria-label="关闭" className="flex items-center justify-center size-11 sm:size-8 -mr-2 sm:mr-0 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-900/5 transition-colors cursor-pointer btn-press">
             <MaterialSymbolsCloseRounded />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>
   );
@@ -157,8 +160,8 @@ const CustomSelect = ({ value, onChange, options, label }) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
-          isOpen ? "ring-2 ring-primary/20 border-primary bg-white" : "hover:bg-gray-100 hover:border-gray-300"
+        className={`w-full flex items-center justify-between border border-line text-gray-900 text-sm rounded-xl px-4 py-3 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+          isOpen ? "ring-2 ring-primary/20 border-primary bg-surface-light" : "bg-background-light hover:bg-surface-active hover:border-muted/40"
         }`}
       >
         <span className="truncate mr-2 font-medium">{selectedOption.label}</span>
@@ -166,7 +169,7 @@ const CustomSelect = ({ value, onChange, options, label }) => {
       </button>
 
       <div
-        className={`absolute z-20 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden transform transition-all duration-200 ease-out origin-top ${
+        className={`absolute z-20 w-full mt-2 bg-surface-light rounded-xl shadow-xl border border-line overflow-hidden transform transition-all duration-200 ease-out origin-top ${
           isOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
         }`}
       >
@@ -179,8 +182,8 @@ const CustomSelect = ({ value, onChange, options, label }) => {
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 flex items-center justify-between ${
-                option.value === value ? "bg-primary/5 text-primary font-semibold" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+              className={`w-full text-left px-4 py-3 sm:py-2.5 text-sm transition-colors duration-150 flex items-center justify-between ${
+                option.value === value ? "bg-primary-soft text-primary font-semibold" : "text-gray-700 hover:bg-surface-active hover:text-gray-900"
               }`}
             >
               <span>{option.label}</span>
@@ -309,7 +312,7 @@ export default function Settings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `streambox-settings-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `NextTV-settings-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -360,16 +363,16 @@ export default function Settings() {
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* Video Sources */}
-      <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-6 border border-gray-100">
+      <section className="surface-panel p-4 md:p-8 mt-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">视频源管理</h2>
+            <h2 className="font-display text-xl font-bold text-gray-900">视频源管理</h2>
             <p className="text-gray-500 mt-1">管理视频来源，调整优先级和启用状态</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => resetToDefaults("video")}
-              className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-surface-light border border-line rounded-lg hover:bg-surface-active hover:text-gray-900 transition-colors shadow-sm cursor-pointer"
             >
               恢复默认
             </button>
@@ -387,7 +390,7 @@ export default function Settings() {
             <MaterialSymbolsSearchRounded className="text-gray-400" />
           </div>
           <input
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 sm:text-sm "
+            className="block w-full pl-10 pr-3 py-3 border border-line rounded-xl leading-5 bg-background-light/50 focus:bg-surface-light placeholder-gray-400 sm:text-sm"
             placeholder="搜索源..."
             type="text"
             value={searchVideo}
@@ -413,10 +416,10 @@ export default function Settings() {
       </section>
 
       {/* Douban Configuration */}
-      <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-8 border border-gray-100">
+      <section className="surface-panel p-4 md:p-8 mt-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">豆瓣配置</h2>
+            <h2 className="font-display text-xl font-bold text-gray-900">豆瓣配置</h2>
             <p className="text-gray-500 mt-1">配置豆瓣 API 和图片代理以防止连接问题</p>
           </div>
         </div>
@@ -437,16 +440,16 @@ export default function Settings() {
       </section>
 
       {/* Danmaku Sources */}
-      <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-8 border border-gray-100">
+      <section className="surface-panel p-4 md:p-8 mt-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">弹幕源管理</h2>
+            <h2 className="font-display text-xl font-bold text-gray-900">弹幕源管理</h2>
             <p className="text-gray-500 mt-1">配置弹幕接口，丰富观影体验（最多支持 1 个弹幕源）</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => resetToDefaults("danmaku")}
-              className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-surface-light border border-line rounded-lg hover:bg-surface-active hover:text-gray-900 transition-colors shadow-sm cursor-pointer"
             >
               恢复默认
             </button>
@@ -464,7 +467,7 @@ export default function Settings() {
             <MaterialSymbolsSearchRounded className="text-gray-400" />
           </div>
           <input
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-3 border border-line rounded-xl leading-5 bg-background-light/50 focus:bg-surface-light placeholder-gray-400 sm:text-sm"
             placeholder="搜索弹幕源..."
             type="text"
             value={searchDanmaku}
@@ -490,15 +493,15 @@ export default function Settings() {
       </section>
 
       {/* Data Management */}
-      <section className="bg-white rounded-2xl shadow-soft p-4 md:p-8 mt-8 border border-gray-100">
+      <section className="surface-panel p-4 md:p-8 mt-8">
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900">数据管理</h2>
+          <h2 className="font-display text-xl font-bold text-gray-900">数据管理</h2>
           <p className="text-gray-500 mt-1">导入或导出您的所有设置、源和播放历史</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
             onClick={handleImport}
-            className="group flex items-center justify-between p-6 bg-gray-50 border border-gray-100 rounded-2xl hover:bg-white hover:border-primary hover:shadow-card hover:ring-1 hover:ring-primary/20 transition-all duration-300 text-left cursor-pointer"
+            className="group flex items-center justify-between p-4 sm:p-6 bg-background-light border border-line rounded-2xl hover:bg-surface-light hover:border-primary hover:shadow-card hover:ring-1 hover:ring-primary/20 transition-all duration-300 text-left cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-300">
@@ -513,7 +516,7 @@ export default function Settings() {
           </button>
           <button
             onClick={handleExport}
-            className="group flex items-center justify-between p-6 bg-gray-50 border border-gray-100 rounded-2xl hover:bg-white hover:border-primary hover:shadow-card hover:ring-1 hover:ring-primary/20 transition-all duration-300 text-left cursor-pointer"
+            className="group flex items-center justify-between p-4 sm:p-6 bg-background-light border border-line rounded-2xl hover:bg-surface-light hover:border-primary hover:shadow-card hover:ring-1 hover:ring-primary/20 transition-all duration-300 text-left cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
@@ -537,7 +540,7 @@ export default function Settings() {
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2.5 sm:py-2 border border-line bg-background-light/50 focus:bg-surface-light rounded-lg"
               placeholder="例如：资源站A"
               value={videoForm.name}
               onChange={(e) => setVideoForm({ ...videoForm, name: e.target.value })}
@@ -548,7 +551,7 @@ export default function Settings() {
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2.5 sm:py-2 border border-line bg-background-light/50 focus:bg-surface-light rounded-lg"
               placeholder="例如：source_a"
               value={videoForm.key}
               onChange={(e) => setVideoForm({ ...videoForm, key: e.target.value })}
@@ -559,7 +562,7 @@ export default function Settings() {
             <input
               type="url"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2.5 sm:py-2 border border-line bg-background-light/50 focus:bg-surface-light rounded-lg"
               placeholder="https://api.example.com/vod"
               value={videoForm.url}
               onChange={(e) => setVideoForm({ ...videoForm, url: e.target.value })}
@@ -568,7 +571,7 @@ export default function Settings() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none"
+              className="w-full px-3 py-2.5 sm:py-2 border border-line bg-background-light/50 focus:bg-surface-light rounded-lg resize-none"
               placeholder="可选的描述信息"
               rows="3"
               value={videoForm.description}
@@ -579,7 +582,7 @@ export default function Settings() {
             <button
               type="button"
               onClick={() => setShowVideoModal(false)}
-              className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-surface-light border border-line rounded-lg hover:bg-surface-active transition-colors cursor-pointer"
             >
               取消
             </button>
@@ -598,7 +601,7 @@ export default function Settings() {
             <input
               type="text"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2.5 sm:py-2 border border-line bg-background-light/50 focus:bg-surface-light rounded-lg"
               placeholder="例如：弹幕库A"
               value={danmakuForm.name}
               onChange={(e) => setDanmakuForm({ ...danmakuForm, name: e.target.value })}
@@ -609,7 +612,7 @@ export default function Settings() {
             <input
               type="url"
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              className="w-full px-3 py-2.5 sm:py-2 border border-line bg-background-light/50 focus:bg-surface-light rounded-lg"
               placeholder="https://api.example.com/danmaku"
               value={danmakuForm.url}
               onChange={(e) => setDanmakuForm({ ...danmakuForm, url: e.target.value })}
@@ -619,7 +622,7 @@ export default function Settings() {
             <button
               type="button"
               onClick={() => setShowDanmakuModal(false)}
-              className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              className="flex-1 min-h-[44px] px-4 py-2.5 text-sm font-medium text-gray-600 bg-surface-light border border-line rounded-lg hover:bg-surface-active transition-colors cursor-pointer"
             >
               取消
             </button>

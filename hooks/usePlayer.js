@@ -4,7 +4,8 @@ import Hls from "hls.js";
 import artplayerPluginDanmuku from "artplayer-plugin-danmuku";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { usePlayHistoryStore } from "@/store/usePlayHistoryStore";
-import { formatTime, CustomHlsJsLoader } from "@/lib/util";
+import { formatTime } from "@/lib/util";
+import { CustomHlsJsLoader } from "@/lib/hlsLoader";
 import { replaceDanmakuLoader } from "@/lib/artplayerDanmaku";
 import { createDanmakuLoader } from "@/lib/danmakuApi";
 export function usePlayer({
@@ -14,6 +15,7 @@ export function usePlayer({
 }) {
   const artRef = useRef(null);
   const artPlayerRef = useRef(null);
+  const nextEpisodeTimerRef = useRef(null);
   const lastSkipCheckRef = useRef(0);
   const lastSaveTimeRef = useRef(0);
   const blockAdEnabledRef = useRef(useSettingsStore.getState().blockAdEnabled);
@@ -518,14 +520,16 @@ export function usePlayer({
       });
 
       artPlayerRef.current.on("video:ended", () => {
+        clearTimeout(nextEpisodeTimerRef.current);
         const currentIdx = CurrentEpisodeIndexEvent();
         if (
           videoDetail &&
           videoDetail.episodes &&
           currentIdx < videoDetail.episodes.length - 1
         ) {
-          setTimeout(() => {
-            setCurrentEpisodeIndex(currentIdx + 1);
+          nextEpisodeTimerRef.current = setTimeout(() => {
+            nextEpisodeTimerRef.current = null;
+            if (CurrentEpisodeIndexEvent() === currentIdx) setCurrentEpisodeIndex(currentIdx + 1);
           }, 1000);
         }
       });
@@ -538,6 +542,8 @@ export function usePlayer({
     }
 
     return () => {
+      clearTimeout(nextEpisodeTimerRef.current);
+      nextEpisodeTimerRef.current = null;
       if (artPlayerRef.current) {
         try {
           if (artPlayerRef.current.video && artPlayerRef.current.video.hls) {
@@ -556,6 +562,8 @@ export function usePlayer({
 
   // 核心 Play Effect: 监听 currentEpisodeIndex 变化，统一执行切换
   useEffect(() => {
+    clearTimeout(nextEpisodeTimerRef.current);
+    nextEpisodeTimerRef.current = null;
     // 只在 currentEpisodeIndex 真正变化时才切换，避免首次挂载时重复切换
     if (
       artPlayerRef.current &&
@@ -569,8 +577,12 @@ export function usePlayer({
 
   useEffect(() => {
     const handleKeyboardShortcuts = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
-        return;
+      // 不抢占表单、按钮或弹窗的原生键盘操作。
+      if (
+        e.defaultPrevented ||
+        document.querySelector('[aria-modal="true"]') ||
+        e.target?.closest?.('input, textarea, select, button, a[href], summary, [contenteditable]:not([contenteditable="false"]), [role="button"], [role="dialog"], [data-player-shortcut-exempt]')
+      ) return;
 
       // 每次按键时获取最新的 episodeIndex
       const currentIdx = CurrentEpisodeIndexEvent();

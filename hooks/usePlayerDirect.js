@@ -4,7 +4,7 @@ import Hls from "hls.js";
 import artplayerPluginDanmuku from "artplayer-plugin-danmuku";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { usePlayHistoryStore } from "@/store/usePlayHistoryStore";
-import { CustomHlsJsLoader } from "@/lib/util";
+import { CustomHlsJsLoader } from "@/lib/hlsLoader";
 import { replaceDanmakuLoader } from "@/lib/artplayerDanmaku";
 import { createDanmakuLoaderDirect } from "@/lib/danmakuApi";
 
@@ -339,8 +339,12 @@ export function usePlayerDirect({
 
   useEffect(() => {
     const handleKeyboardShortcuts = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
-        return;
+      // 不抢占表单、按钮或弹窗的原生键盘操作。
+      if (
+        e.defaultPrevented ||
+        document.querySelector('[aria-modal="true"]') ||
+        e.target?.closest?.('input, textarea, select, button, a[href], summary, [contenteditable]:not([contenteditable="false"]), [role="button"], [role="dialog"], [data-player-shortcut-exempt]')
+      ) return;
 
       if (!e.altKey && e.key === "ArrowLeft") {
         if (artPlayerRef.current && artPlayerRef.current.currentTime > 5) {

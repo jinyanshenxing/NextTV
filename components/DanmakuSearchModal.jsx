@@ -1,72 +1,39 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
-import { DanmakuSearch } from "@/components/DanmakuSearch";
+import { useCallback } from "react";
+import dynamic from "next/dynamic";
+import { AnimatedDialog } from "@/components/AnimatedDialog";
+
+const DanmakuSearch = dynamic(() => import("@/components/DanmakuSearch").then((module) => module.DanmakuSearch), {
+  ssr: false,
+  loading: () => <div role="status" className="surface-panel p-8 text-center text-sm text-muted">正在加载弹幕搜索…</div>,
+});
 
 const NOOP = () => {};
 
 export function DanmakuSearchModal({ isOpen, onClose, initialTitle, onEpisodeConfirm }) {
-
-  // ESC 键关闭
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // 防止背景滚动
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   const handleEpisodeSelect = useCallback((episodeId) => {
     onEpisodeConfirm?.(episodeId);
-    // 选集后短暂延迟关闭，让用户看到选中状态
-    setTimeout(() => {
-      onClose();
-    }, 400);
+    onClose();
   }, [onEpisodeConfirm, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="danmaku-modal-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <AnimatedDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      label="手动搜索弹幕"
+      initialFocusSelector="input"
+      overlayClassName="danmaku-modal-overlay"
+      className="danmaku-modal-content outline-none"
     >
-      <div className="danmaku-modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* 关闭按钮 */}
-        <button
-          className="danmaku-modal-close"
-          onClick={onClose}
-          aria-label="关闭"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* DanmakuSearch 复用 */}
-        <div className="danmaku-modal-body">
-          <DanmakuSearch
-            initialTitle={initialTitle || ""}
-            onEpisodeSelect={handleEpisodeSelect}
-            onAnimeSelect={NOOP}
-          />
-        </div>
+      <button type="button" className="danmaku-modal-close" onClick={onClose} aria-label="关闭弹幕搜索">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div className="danmaku-modal-body">
+        <DanmakuSearch initialTitle={initialTitle || ""} onEpisodeSelect={handleEpisodeSelect} onAnimeSelect={NOOP} />
       </div>
-    </div>
+    </AnimatedDialog>
   );
 }
