@@ -9,7 +9,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useMediaQuery, MOBILE_QUERY } from "@/hooks/useMediaQuery";
 import { usePlayHistoryStore } from "@/store/usePlayHistoryStore";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
-import { useSearchScrollStore } from "@/store/useSearchScrollStore";
+import { pushBrowseRoute } from "@/store/useBrowseScrollStore";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -20,6 +20,7 @@ import {
   MaterialSymbolsSettingsOutlineRounded,
   MaterialSymbolsDirectionsAltOutlineRounded,
   MaterialSymbolsHomeOutlineRounded,
+  MaterialSymbolsGridViewOutlineRounded,
   MaterialSymbolsSearchRounded,
   SimpleIconsGithub,
 } from "@/components/icons";
@@ -85,18 +86,15 @@ export function Navbar() {
         title: record.title || "",
         poster: record.poster || "",
       });
-      router.push(`/direct?${params.toString()}`);
+      pushBrowseRoute(router, `/direct?${params.toString()}`);
     } else {
-      router.push(`/play/${record.id}?source=${record.source}`);
+      pushBrowseRoute(router, `/play/${record.id}?source=${record.source}`);
     }
   };
 
-  const clearScrollPosition = useSearchScrollStore((state) => state.clearScrollPosition);
-
   const handleFavoriteClick = (favorite) => {
     setOpenPanel(null);
-    clearScrollPosition();
-    router.push(`/search?q=${encodeURIComponent(favorite.title)}`);
+    pushBrowseRoute(router, `/search?q=${encodeURIComponent(favorite.title)}`);
   };
 
   const libraryPanel = openPanel && (
@@ -117,14 +115,15 @@ export function Navbar() {
     />
   );
 
-  const isActiveRoute = (href) => !openPanel && pathname === href;
+  const isActiveRoute = (href) => !openPanel && (pathname === href || (href === "/direct-input" && pathname === "/direct"));
 
   return (
     <>
       <div className="sticky top-0 z-50 w-full border-b border-line bg-background-light/95 backdrop-blur-md pt-[env(safe-area-inset-top)]">
-        <header className="relative max-w-[1504px] mx-auto flex h-16 md:h-18 items-center justify-between gap-3 px-4 sm:px-6 xl:px-8">
+        <header className="relative max-w-[1504px] mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:px-6 xl:px-8">
           <Link
             href="/"
+            onClick={() => setOpenPanel(null)}
             aria-label="NextTV 首页"
             className="flex items-center gap-2 select-none shrink-0 rounded-lg min-h-11"
           >
@@ -135,18 +134,22 @@ export function Navbar() {
           </Link>
 
           <nav aria-label="内容导航" className="hidden md:flex items-center gap-1 mr-auto ml-2">
-            <Link href="/" aria-current={pathname === "/" ? "page" : undefined} className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors ${pathname === "/" ? "bg-primary-soft text-primary-dark" : "text-muted hover:bg-surface-active hover:text-ink"}`}>
+            <Link href="/" onClick={() => setOpenPanel(null)} aria-current={pathname === "/" ? "page" : undefined} className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors ${pathname === "/" ? "bg-primary-soft text-primary-dark" : "text-muted hover:bg-surface-active hover:text-ink"}`}>
               <MaterialSymbolsHomeOutlineRounded className="text-xl" aria-hidden="true" />
               发现
             </Link>
-            <Link href="/direct-input" aria-current={pathname === "/direct-input" || pathname === "/direct" ? "page" : undefined} className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors ${pathname === "/direct-input" || pathname === "/direct" ? "bg-primary-soft text-primary-dark" : "text-muted hover:bg-surface-active hover:text-ink"}`}>
+            <Link href="/source-browse" onClick={() => setOpenPanel(null)} aria-current={pathname === "/source-browse" ? "page" : undefined} className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors ${pathname === "/source-browse" ? "bg-primary-soft text-primary-dark" : "text-muted hover:bg-surface-active hover:text-ink"}`}>
+              <MaterialSymbolsGridViewOutlineRounded className="text-xl" aria-hidden="true" />
+              源浏览
+            </Link>
+            <Link href="/direct-input" onClick={() => setOpenPanel(null)} aria-current={pathname === "/direct-input" || pathname === "/direct" ? "page" : undefined} className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors ${pathname === "/direct-input" || pathname === "/direct" ? "bg-primary-soft text-primary-dark" : "text-muted hover:bg-surface-active hover:text-ink"}`}>
               <MaterialSymbolsDirectionsAltOutlineRounded className="text-xl" aria-hidden="true" />
               直链播放
             </Link>
           </nav>
 
           {pathname !== "/" && pathname !== "/search" && (
-            <div className="hidden lg:block flex-1 min-w-0 max-w-xs mx-2">
+            <div className="hidden xl:block flex-1 min-w-0 max-w-xs mx-2">
               <SearchBox compact />
             </div>
           )}
@@ -154,10 +157,21 @@ export function Navbar() {
           <nav aria-label="个人工具" className="flex items-center gap-1 sm:gap-2">
             <Link
               href="/search"
+              onClick={() => setOpenPanel(null)}
               aria-label="搜索影视"
-              className="ui-button ui-icon-button btn-press md:hidden border-transparent bg-transparent text-muted"
+              aria-current={pathname === "/search" ? "page" : undefined}
+              className={`ui-button ui-icon-button btn-press md:hidden border-transparent bg-transparent ${pathname === "/search" ? "text-primary-dark" : "text-muted"}`}
             >
               <MaterialSymbolsSearchRounded className="text-2xl" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/source-browse"
+              onClick={() => setOpenPanel(null)}
+              aria-label="浏览视频源"
+              aria-current={pathname === "/source-browse" ? "page" : undefined}
+              className={`ui-button ui-icon-button btn-press md:hidden border-transparent bg-transparent ${pathname === "/source-browse" ? "bg-primary-soft text-primary-dark" : "text-muted"}`}
+            >
+              <MaterialSymbolsGridViewOutlineRounded className="text-2xl" aria-hidden="true" />
             </Link>
 
             {/* 片库：观看历史 / 我的收藏 */}
@@ -189,6 +203,7 @@ export function Navbar() {
 
             <Link
               href="/settings"
+              onClick={() => setOpenPanel(null)}
               aria-label="设置"
               title="设置"
               aria-current={pathname === "/settings" ? "page" : undefined}
@@ -203,7 +218,7 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub 开源项目"
-              className="ui-button ui-icon-button border-transparent bg-transparent text-muted btn-press"
+              className="ui-button ui-icon-button hidden md:flex border-transparent bg-transparent text-muted btn-press"
             >
               <SimpleIconsGithub aria-hidden="true" className="size-5" fill="currentColor" viewBox="0 0 24 24" />
             </Link>
